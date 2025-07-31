@@ -2,9 +2,6 @@
 
 A sleek and modern blog application built with React, featuring a responsive design, mobile-friendly sidebar navigation, and a rich text editor for creating beautiful blog posts.
 
-<p align="center">
-  <img src="https://ui-avatars.com/api/?name=Blog+App&background=0070f3&color=fff&size=128&rounded=true&bold=true" alt="Blog App Logo" width="96" height="96" />
-</p>
 
 <p align="center">
   <a href="https://reactjs.org/"><img src="https://img.shields.io/badge/React-18.2-blue?logo=react" alt="React" /></a>
