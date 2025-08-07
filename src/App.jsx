@@ -1,26 +1,25 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
-import Sidebar from './components/Sidebar';
+import Home from './pages/Home';
 import BlogList from './pages/BlogList';
-import CreateBlog from './pages/CreateBlog';
 import BlogDetail from './pages/BlogDetail';
+import CreateBlog from './pages/CreateBlog';
+import NotFound from './pages/NotFound';
 
 function App() {
   return (
-    <BrowserRouter>
-      <div className="app">
-        <Navbar />
-        <Sidebar />
-        <main className="main-content">
-          <Routes>
-            <Route path="/" element={<Navigate to="/blogs" />} />
-            <Route path="/blogs" element={<BlogList />} />
-            <Route path="/create" element={<CreateBlog />} />
-            <Route path="/blogs/:id" element={<BlogDetail />} />
-          </Routes>
-        </main>
-      </div>
-    </BrowserRouter>
+    <div className="app">
+      <Navbar />
+      <main className="main-content">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/blogs" element={<BlogList />} />
+          <Route path="/blogs/:id" element={<BlogDetail />} />
+          <Route path="/create" element={<CreateBlog />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </main>
+    </div>
   );
 }
 
