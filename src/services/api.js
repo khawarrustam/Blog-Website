@@ -1,4 +1,20 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_URL = 'https://blog-backend-rouge-zeta.vercel.app/api';
+
+/**
+ * Clean content to remove characters that might cause database issues
+ * @param {string} content - The content to clean
+ * @returns {string} - Cleaned content
+ */
+const cleanContent = (content) => {
+  if (!content) return content;
+  
+  // Remove or replace emojis and other 4-byte UTF-8 characters
+  // This regex matches most emojis and other 4-byte UTF-8 characters
+  return content
+    .replace(/[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '') // Remove emojis
+    .replace(/[\u{10000}-\u{10FFFF}]/gu, '') // Remove other 4-byte characters
+    .trim();
+};
 
 /**
  * Fetch all blog posts
@@ -13,7 +29,7 @@ export const getBlogs = async () => {
     }
     const data = await response.json();
     console.log('Blogs data received:', data);
-    return data.blogs || [];
+    return data.data?.blogs || [];
   } catch (error) {
     console.error('Error fetching blogs:', error);
     throw error;
@@ -32,7 +48,7 @@ export const getBlogById = async (id) => {
       throw new Error('Failed to fetch blog');
     }
     const data = await response.json();
-    return data.blog;
+    return data.data;
   } catch (error) {
     console.error(`Error fetching blog ${id}:`, error);
     throw error;
@@ -47,31 +63,69 @@ export const getBlogById = async (id) => {
 export const createBlog = async (blogData) => {
   try {
     console.log('API createBlog called with data:', blogData);
-    const formData = new FormData();
-    formData.append('title', blogData.title);
-    formData.append('content', blogData.content);
     
-    // Comment out or remove the author part
-    // if (blogData.author) {
-    //   formData.append('author', blogData.author);
-    // }
+    // Clean the content to remove problematic characters
+    const cleanedTitle = cleanContent(blogData.title);
+    const cleanedContent = cleanContent(blogData.content);
+    const cleanedAuthor = cleanContent(blogData.author) || 'Anonymous';
     
-    // Add cover image if it exists
+    console.log('Content cleaned, proceeding with API call...');
+    
+    // If there's a cover image, try to upload with FormData
     if (blogData.cover && blogData.cover instanceof File) {
-      formData.append('cover', blogData.cover);
-      console.log('Adding cover image to form data:', blogData.cover.name);
-    }
+      console.log('Attempting to upload blog with image...');
+      
+      try {
+        const formData = new FormData();
+        formData.append('title', cleanedTitle);
+        formData.append('content', cleanedContent);
+        formData.append('author', cleanedAuthor);
+        formData.append('cover_image', blogData.cover);
 
-    // Log form data entries
-    for (let [key, value] of formData.entries()) {
-      console.log(`Form data entry - ${key}:`, value);
-    }
+        console.log('Sending request with FormData to:', `${API_URL}/blogs`);
+        const response = await fetch(`${API_URL}/blogs`, {
+          method: 'POST',
+          body: formData,
+        });
 
-    console.log('Sending request to:', `${API_URL}/blogs`);
+        console.log('Response status:', response.status);
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('File upload failed:', errorText);
+          
+          // If file upload fails, try without the image
+          console.log('Retrying without image...');
+          throw new Error('FILE_UPLOAD_FAILED');
+        }
+
+        const data = await response.json();
+        console.log('Blog with image created successfully:', data);
+        return data.data;
+        
+      } catch (error) {
+        if (error.message === 'FILE_UPLOAD_FAILED') {
+          console.log('File upload not supported, creating blog without image...');
+          // Fall through to JSON method without image
+        } else {
+          throw error;
+        }
+      }
+    }
+    
+    // Use JSON for text-only blogs or as fallback
+    const payload = {
+      title: cleanedTitle,
+      content: cleanedContent,
+      author: cleanedAuthor
+    };
+
+    console.log('Sending request with JSON to:', `${API_URL}/blogs`);
     const response = await fetch(`${API_URL}/blogs`, {
       method: 'POST',
-      body: formData,
-      // No headers needed for FormData
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
     });
 
     console.log('Response status:', response.status);
@@ -83,7 +137,7 @@ export const createBlog = async (blogData) => {
 
     const data = await response.json();
     console.log('Blog created successfully:', data);
-    return data.blog;
+    return data.data;
   } catch (error) {
     console.error('Error creating blog:', error);
     throw error;
