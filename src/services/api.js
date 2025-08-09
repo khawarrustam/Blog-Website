@@ -1,4 +1,7 @@
-const API_URL = 'https://blog-backend-rouge-zeta.vercel.app/api';
+// Use relative path in production (will be proxied by Vercel), direct URL in development
+const API_URL = import.meta.env.PROD 
+  ? '/api' 
+  : 'https://blog-backend-rouge-zeta.vercel.app/api';
 
 /**
  * Clean content to remove characters that might cause database issues
