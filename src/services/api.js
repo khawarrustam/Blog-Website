@@ -1,7 +1,8 @@
-// Use relative path in production (will be proxied by Vercel), direct URL in development
+// Use relative path in production (will be proxied by Vercel), 
+// environment variable or fallback URL in development
 const API_URL = import.meta.env.PROD 
   ? '/api' 
-  : 'https://blog-backend-rouge-zeta.vercel.app/api';
+  : (import.meta.env.VITE_API_URL || 'https://blog-backend-rouge-zeta.vercel.app/api');
 
 /**
  * Clean content to remove characters that might cause database issues
